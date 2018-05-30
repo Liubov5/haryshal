@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+        
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' gap:; style-src 'self' 'unsafe-inline'; media-src *" />
+        <link rel="stylesheet" href="css/index.css">
+        <style>
+            p{
+                margin:0;
+            }
+        </style>
+</head>
+<body>
+	<nav>
+		<ul>
+			<li>
+				<a href="personalPage.html">Личная страница</a>
+			</li>
+		</ul>
+	</nav>
+	<div class="container" id="cont">
+		<h6>Мои активные объявления</h6>
+		
+	</div>
+	
+	 <script type="text/javascript" src="cordova.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+        <script>
+
+        	$(document).ready(function(){
+        		$.ajax({
+        			url:"http://192.168.1.33:8000/api/getAdvertisement",
+        			data:{
+        				user_id:localStorage.user_id
+        			},
+        			success:function(arg){
+        				console.log(arg)
+        				for(var i=0;i<arg.length;i++){
+        					var div = document.createElement("div");
+        					$("#cont").append(div);
+        					div.classList.add("row");
+
+        					var p = document.createElement("p");
+        					div.appendChild(p);
+        					p.innerHTML= arg[i].from;
+
+        					var p = document.createElement("p");
+        					div.appendChild(p);
+        					p.innerHTML= arg[i].to;
+
+
+        					var p = document.createElement("p");
+        					div.appendChild(p);
+        					p.innerHTML= arg[i].body;
+
+
+        					var p = document.createElement("p");
+        					div.appendChild(p);
+        					p.innerHTML= "Пока никто не принял просьбу";
+
+        					var divider = document.createElement("div");
+        					div.appendChild(divider);
+        					divider.classList.add("divider");
+
+        				}
+        			}
+        		})
+        	});
+        </script>
+</body>
+</html>

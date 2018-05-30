@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+        
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' gap:; style-src 'self' 'unsafe-inline'; media-src *" />
+        <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+	<nav>
+		<a href="volunteerPage.html">
+			 <i class="material-icons" id="back" style="display: block">arrow_back</i>
+		</a>
+		 
+	</nav>
+	<div class="container" >
+		<h5>Последние объявления</h5>
+		<div id="cont"></div>
+	</div>
+	
+	   <script type="text/javascript" src="cordova.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+        <script>
+                var user_array = [];
+                var adverts_array=[]
+        	$(document).ready(function(){
+        		$.ajax({
+        			url:"http://192.168.1.33:8000/api/allAdverts",
+        			success:function(arg){
+        				console.log(arg);
+        				if(arg.length==0){
+        					$("#cont").html("Нет новых заявок");
+        				}else{
+        					for(var i=0;i<arg.length;i++){
+                                                        user_array.push(arg[i].user_id);
+                                                        adverts_array.push(arg[i].id);
+                					var div = document.createElement("div");
+                					$("#cont").append(div);
+                					div.classList.add("container","active_adverts");
+
+                					var from = document.createElement("p");
+                					div.appendChild(from);
+                					from.innerHTML = "<span style='font-weight:900'>Откуда: </span>"+arg[i].from;
+
+                					var to = document.createElement("p");
+                					div.appendChild(to);
+                					to.innerHTML = "<span style='font-weight:900'>Куда: </span>"+arg[i].to;
+
+                					var desc = document.createElement("p");
+                					div.appendChild(desc);
+                					desc.innerHTML = "<span style='font-weight:900'>Описание: </span>"+arg[i].body;
+
+                					
+        					
+        				    }
+                                            $.ajax({
+                                                url:"http://192.168.1.33:8000/api/getActiveAdvertInfo",
+                                                data:{
+                                                        user_id:user_array
+                                                },
+                                                success:function(arg){
+                                                        console.log(arg)
+                                                        var cont = document.querySelectorAll(".active_adverts");
+                                                        for(var i=0;i<arg.length;i++){
+                                                                var p_parent_name = document.createElement("p");
+                                                                cont[i].appendChild(p_parent_name);
+                                                                p_parent_name.innerHTML ="<span style='font-weight:900'>Просьба от: </span>" +arg[i][0].parent_name;
+
+                                                                var btn = document.createElement("button");
+                                                        cont[i].appendChild(btn);
+                                                        btn.classList.add("btn");
+                                                        btn.innerHTML = "Принять участие";
+                                                        btn.advert_id = adverts_array[i];
+
+                                                        btn.onclick = function(){
+                                                                console.log(this.advert_id);
+                                                                $.ajax({
+                                                                        url:"http://192.168.1.33:8000/api/respond",
+                                                                        data:{
+                                                                                volunteer_id: localStorage.user_id,
+                                                                                advert_id:this.advert_id
+                                                                        },
+                                                                        success:function(arg){
+                                                                                window.location = "volunteerPage.html"
+                                                                        }
+
+                                                                });
+                                                        }
+                                                        }
+                                                       
+                                                }
+                                            });
+                                            console.log(user_array)
+        				}
+        				
+        			}
+        		})
+        	});
+
+        
+        </script>
+</body>
+</html>

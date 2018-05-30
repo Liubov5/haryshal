@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+        
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' gap:; style-src 'self' 'unsafe-inline'; media-src *" />
+        <link rel="stylesheet" href="css/index.css">
+        <style>
+        p{
+        margin:0;
+        }
+        </style>
+    </head>
+    <body>
+        <nav id="menu">
+            <ul>
+                <li><a href="main.html">Главная</a></li>
+                <li id="welcome"></li>
+            </ul>
+            
+        </nav>
+        <div class="container">
+            <div id="personalPage">
+                <h6>Страница подопечного фонда Харысхал</h6>
+                <div id="info">
+                    
+                </div>
+                <div id="myAdvert">
+                    <ul class="collapsible">
+                         <li>
+                            <div class="collapsible-header"><i class="material-icons">add_box</i>Принятые объявления</div>
+                            <div class="collapsible-body"><span id="responded"></span></div>
+                        </li>
+                        <li>
+                            <div class="collapsible-header"><i class="material-icons">filter_drama</i>Архив объявлений</div>
+                            <div class="collapsible-body"><span id="lol"></span></div>
+                        </li>
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="addAdvertisement" class="container">
+            <h6> Добавить объявление</h6>
+            <div class="row"><p>Откуда</p><input type="text" id="from"></div>
+            <div class="row"><p>Куда</p><input type="text" id="to"></div>
+            <div class="row"><p>Описание</p><input type="text" id="body"></div>
+            <button class="btn " id="addBtn">Подать объявление</button>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+        <script type="text/javascript">
+        var status = false;
+        var arr = [];
+        var adv_id=[];
+        $(document).ready(function(){
+
+        $('.collapsible').collapsible();
+        //получение объявлений которые еще не выполнены
+            $.ajax({
+                url:"http://192.168.1.33:8000/api/getRespondedAdverts",
+                data:{
+                    user_id:localStorage.user_id
+                },
+                success:function(arg){
+                    console.log(arg)
+                if(arg.length==0){
+                    $("#responded").html("Нет ожидаемых заказов");
+                }
+                else{
+
+                    for(var i=0;i<arg.length;i++){
+                       arr.push(arg[i].volunteer_id)
+                       adv_id.push(arg[i].id)
+                            var div = document.createElement("div");
+                            $("#responded").append(div);
+                            div.classList.add("row","info_zakaz");
+                            var p = document.createElement("p");
+                            div.appendChild(p);
+                            p.innerHTML= "Откуда: "+arg[i].from;
+                            var p = document.createElement("p");
+                            div.appendChild(p);
+                            p.innerHTML= "Куда: " +arg[i].to;
+                            var p = document.createElement("p");
+                            div.appendChild(p);
+                            p.innerHTML= "Описание: "+arg[i].body;     
+                        
+                    }
+                    //запрос на получение инфо о волонтере, который принял заказ
+                    $.ajax({
+                        url:"http://192.168.1.33:8000/api/getVolunteersInfo",
+                        data:{
+                            vol_id:arr,
+                        },
+                        success:function(arg){
+                            var divs = document.querySelectorAll(".info_zakaz");
+                            console.log(divs)
+                            for(var i=0;i<arg.length;i++){
+                                //добавление имени волонтера
+                                var p_name = document.createElement("p");
+                                divs[i].appendChild(p_name);
+                                p_name.innerHTML ="<span style='font-weight:900'>Ваш заказ принял: </span>" +  arg[i][0].volunteer_name;
+                                //добавление его контактов
+                                var p_contact = document.createElement("p");
+                                divs[i].appendChild(p_contact);
+                                p_contact.innerHTML ='<span style="font-weight:900">Свяжитесь с волонтером:</span> ' + arg[i][0].volunteer_contact;
+                                //добавление кнопки выполнил заказ
+                                var btn = document.createElement("button"); 
+                                 divs[i].appendChild(btn);
+                                 btn.classList.add("btn");
+                                 btn.innerHTML = "Помогли";
+                                 btn.advert_id = adv_id[i]
+                                var divider = document.createElement("div");
+                                divs[i].appendChild(divider);
+                                divider.classList.add("divider");
+                                btn.onclick = function(){
+                                    console.log(this.advert_id);
+                                    $.ajax({
+                                        url:"http://192.168.1.33:8000/api/deleteAdvert",
+                                        data:{
+                                            adv_id:this.advert_id
+                                        },
+                                        success:function(arg){
+                                            console.log(arg)
+                                            location.reload();
+                                        }
+                                    });
+                                }
+                                      
+                            }
+                        }
+                    });
+                   
+                }
+            }
+            })
+            //получить инфо о клиенте
+            $.ajax({
+                url:"http://192.168.1.33:8000/api/getClientInfo",
+                data:{
+                user_id:localStorage.user_id,
+                },
+                success:function(arg){
+                
+                    var p = document.createElement("p");
+                    $("#info").append(p);
+                    p.innerHTML = "Имя родителя: "+arg[0].parent_name;
+                    var p = document.createElement("p");
+                    $("#info").append(p);
+                    p.innerHTML = "Имя ребенка: "+arg[0].child_name;
+                }
+            });
+
+            var old_vol_id=[];
+            //архив объявлений, которые уже выполнены
+        $.ajax({
+            url:"http://192.168.1.33:8000/api/getOldAdvertisement",
+            data:{
+                user_id:localStorage.user_id,
+            },
+            success:function(arg){
+                if(arg.length==0){
+                    $("#lol").html("Нет выполненных заказов");
+                }
+                else{
+                    for(var i=0;i<arg.length;i++){
+                        old_vol_id.push(arg[i].volunteer_id)
+                        var div = document.createElement("div");
+                        $("#lol").append(div);
+                        div.classList.add("row","old_adverts");
+                        var p = document.createElement("p");
+                        div.appendChild(p);
+                        p.innerHTML= arg[i].from;
+                        var p = document.createElement("p");
+                        div.appendChild(p);
+                        p.innerHTML= arg[i].to;
+                        var p = document.createElement("p");
+                        div.appendChild(p);
+                        p.innerHTML= arg[i].body;
+                   
+                 
+                        }
+                        console.log(old_vol_id)
+
+                        //получение инфы о волонтерах, которые выполнили задание
+                        $.ajax({
+                            url:"http://192.168.1.33:8000/api/getOldVolunteers",
+                            data:{
+                                vol_id:old_vol_id
+                            },
+                            success:function(arg){
+                                 var divs = document.querySelectorAll(".old_adverts");
+                                for(var i=0;i<arg.length;i++){
+                                    var p_name = document.createElement("p");
+                                    divs[i].appendChild(p_name);
+                                    p_name.innerHTML = "<span style='font-weight:900'>Заказ выполнил: </span>" + arg[i][0].volunteer_name;
+
+
+                                    var divider = document.createElement("div");
+                                    div.appendChild(divider);
+                                    divider.classList.add("divider");
+                                }
+                               
+
+                               
+                            }
+                        });
+                    }
+                }
+            });
+            });
+            //добавить объявление
+            $("#addBtn").on('click',function(){
+            
+                if($('#from').val()=="" || $("#to").val()=="" || $("#body").val()==""){
+                 alert("необходимо заполнить все поля");
+                }
+                else{
+                    $.ajax({
+                        url:"http://192.168.1.33:8000/api/addAdvertisement",
+                        data:{
+                        from:$('#from').val(),
+                        to:$('#to').val(),
+                        body:$('#body').val(),
+                            user_id:localStorage.user_id
+                        },
+                        success:function(arg){
+                            console.log(arg);
+                            window.location = "main.html";
+                        }
+                    });
+                }
+            })
+            </script>
+        </body>
+    </html>

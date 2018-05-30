@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+        
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' gap:; style-src 'self' 'unsafe-inline'; media-src *" />
+        <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+		<nav>
+			<ul>	
+				<li>
+					<a href="advertisements.html" style="position: relative;">
+							
+							<i class="material-icons" id="notificationsBtn">notifications </i>
+							<span style="position: absolute; top:-30%;left:60%" id="notif_number"></span>
+					</a>	
+				</li>
+				<li>	
+					
+				</li>
+				
+			</ul>
+		</nav>
+		<div class="container">
+			<div class="row">
+				<div class="col s12"><p id="name"></p></div>
+				<div class="col s12"><p id="contact"></p></div>
+				<div class="col s12"><p id="passport"></p></div>
+			</div>
+			<div class="row">
+				<ul class="collapsible">
+				    <li>
+				      <div class="collapsible-header"><i class="material-icons">filter_drama</i>Архив выполненных просьб</div>
+				      <div class="collapsible-body" id="archive_adverts">
+				      
+				      </div>
+				    </li>
+				     <li>
+				      <div class="collapsible-header"><i class="material-icons">filter_drama</i>Активные просьбы</div>
+				      <div class="collapsible-body" id="active_adverts">
+				      
+				      </div>
+				    </li>
+  				</ul>
+			</div>
+		</div>
+	     <script type="text/javascript" src="cordova.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+        <script>
+
+        	$(document).ready(function(){
+        		 $('.collapsible').collapsible();
+        		$.ajax({
+        			url:"http://192.168.1.33:8000/api/getVolunteerInfo",
+        			data:{
+        				user_id:localStorage.user_id
+        			},
+        			success:function(arg){
+        				$('#name').html("Ваше имя: "+arg[0].volunteer_name);
+        				$('#contact').html("Ваш контактный телефон: "+arg[0].volunteer_contact);
+        				$('#passport').html("Ваши паспортные данные: " + arg[0].volunteer_passport);
+        			}
+        		});
+
+        		$.ajax({
+        			url:"http://192.168.1.33:8000/api/getNewAdverts",
+        			success:function(arg){
+        				$("#notif_number").html(arg.length);
+
+        			}
+        		});
+
+        		$.ajax({
+        			url:"http://192.168.1.33:8000/api/getOldVoluntAdverts",
+        			data:{
+        				volunt_id:localStorage.user_id,
+        			},
+        			success:function(arg){
+                      
+        				if(arg.length==0){
+        					$("#archive_adverts").html("У вас пока нет выполненных просьб");
+        				}
+        				else{
+        					for(var i=0;i<arg.length;i++){
+        						var div_row = document.createElement("div");
+        						$('#archive_adverts').append(div_row);
+
+        						var p_from = document.createElement("p");
+        						div_row.appendChild(p_from);
+        						p_from.innerHTML = arg[i].from;
+
+        						var p_to = document.createElement("p");
+        						div_row.appendChild(p_to)
+        						p_to.innerHTML = arg[i].to
+
+        						var p_body = document.createElement("p");
+        						div_row.appendChild(p_body);
+        						p_body.innerHTML = arg[i].body;
+
+        						var divider = document.createElement("div");
+        						div_row.appendChild(divider);
+        						divider.classList.add("divider");
+        					}
+        				}
+        			}
+        		});
+                var adverts_array = [];
+                var adverts_id =[];
+        		$.ajax({
+        			url:"http://192.168.1.33:8000/api/getActiveVoluntAdverts",
+        			data:{
+        				volunt_id:localStorage.user_id
+        			},
+        			success:function(arg){
+        				if(arg.length==0){
+        					$("#active_adverts").html("У вас пока не назначено просьб");
+        				}
+        				else{
+        					for(var i=0;i<arg.length;i++){
+                                adverts_array.push(arg[i].user_id);
+                                adverts_id.push(arg[i].id);
+        						var div_row = document.createElement("div");
+        						$('#active_adverts').append(div_row);
+                                div_row.classList.add("row","active_row");
+
+        						var p_from = document.createElement("p");
+        						div_row.appendChild(p_from);
+        						p_from.innerHTML = arg[i].from;
+
+        						var p_to = document.createElement("p");
+        						div_row.appendChild(p_to)
+        						p_to.innerHTML = arg[i].to
+
+        						var p_body = document.createElement("p");
+        						div_row.appendChild(p_body);
+        						p_body.innerHTML = arg[i].body;
+
+        					
+        					}
+
+                             $.ajax({
+                    url:"http://192.168.1.33:8000/api/getParentAdvertsInfo",
+                    data:{
+                       array:adverts_array,
+                    },
+                    success:function(arg){
+                    
+                        if(arg.length==0){
+                            $("#active_adverts").html("активных сообщений нет")
+                        }
+                        else{
+                            
+                            var divs = document.querySelectorAll(".active_row");
+
+                            for(var i=0;i<arg.length;i++){
+                                    var p_name = document.createElement("p");
+                                divs[i].appendChild(p_name);
+                                p_name.innerHTML = "<span style='font-weight:900'>Просьба от: </span>"+arg[i][0].parent_name;
+
+                                var p_contact = document.createElement("p");
+                                divs[i].appendChild(p_contact);
+                                p_contact.innerHTML = "<span style='font-weight:900'>Свяжитесь по номеру: </span>"+arg[i][0].parent_contact;
+
+                                btn = document.createElement("button");
+                                divs[i].appendChild(btn);
+                                btn.classList.add("btn");
+                                btn.style.marginBottom="20px"
+                                btn.innerHTML = "Отказаться";
+                                btn.advert_id = adverts_id[i];
+                                btn.onclick = function(){
+                                    console.log(this.advert_id);
+                                    $.ajax({
+                                        url:"http://192.168.1.33:8000/api/refuseRequest",
+                                        data:{
+                                            advert_id:this.advert_id
+                                        },
+                                        success:function(arg){
+                                            console.log(arg);
+                                            location.reload();
+                                        }
+                                    });
+                                }
+
+                                var divider = document.createElement("div");
+                                divs[i].appendChild(divider);
+                                divider.classList.add("divider");
+                            }
+                        }
+                    }
+                });
+                            
+        				}
+        			}
+        		});
+               
+        	});
+        	
+        </script>
+</body>
+</html>
